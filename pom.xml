@@ -66,6 +66,10 @@
         <developerConnection>scm:dummy:uri</developerConnection>
     </scm>
 
+    <properties>
+        <jahia-module-type>system</jahia-module-type>
+    </properties>
+
     <repositories>
         <repository>
             <id>jahia-public</id>
@@ -80,19 +84,4 @@
             </snapshots>
         </repository>
     </repositories>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Jahia-Depends>default</Jahia-Depends>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
