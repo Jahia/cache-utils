@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+        version="2.0">
+
+    <display-name>Cache Utilities Tag Library</display-name>
+    <tlib-version>1.0</tlib-version>
+    <short-name>cache-utils</short-name>
+    <uri>http://www.jahia.org/tags/ps/cacheUtilsLib</uri>
+
+    <tag>
+        <description>
+            Declares additional cache dependencies for the specified node.
+            The dependencies are node types, and any modification on a node of one of those types will trigger an invalidation of the output cache for the specified node.
+        </description>
+        <name>addNodeTypeBasedCacheDependency</name>
+        <tag-class>org.jahia.ps.modules.utils.cache.taglibs.AddNodeTypeBasedCacheDependencyTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <description>
+                The node to declare cache dependencie for.
+                If not specified, then the 'currentNode' as in the JSP where the tag is executed will be used.
+            </description>
+            <name>node</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>org.jahia.services.content.JCRNodeWrapper</type>
+        </attribute>
+        <attribute>
+            <description>
+                Node types to listen for.
+                If several types need to be listed, they have to be separated by some spaces.
+            </description>
+            <name>nodeTypes</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>java.lang.String</type>
+        </attribute>
+    </tag>
+
+</taglib>

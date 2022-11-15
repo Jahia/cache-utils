@@ -57,7 +57,7 @@
     <groupId>org.jahia.ps.modules</groupId>
     <artifactId>cache-utils</artifactId>
     <name>Cache Utils</name>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <description>This is the custom module (Cache Utils) for running on a Jahia server.</description>
 
@@ -68,6 +68,7 @@
 
     <properties>
         <jahia-module-type>system</jahia-module-type>
+        <export-package>org.jahia.ps.modules.utils.cache.taglibs</export-package>
     </properties>
 
     <repositories>
@@ -95,4 +96,27 @@
             <url>https://devtools.jahia.com/nexus/content/repositories/jahia-professional-services-private-repository</url>
         </snapshotRepository>
     </distributionManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>jsp-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <_dsannotations>*</_dsannotations>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
