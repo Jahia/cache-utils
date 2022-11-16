@@ -7,6 +7,7 @@ import org.jahia.services.cache.CacheHelper;
 import org.jahia.services.content.DefaultEventListener;
 import org.jahia.services.content.JCRItemWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
+import org.jahia.services.content.JCRObservationManager;
 import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.content.JCRTemplate;
 import org.osgi.service.component.annotations.Activate;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -157,32 +159,66 @@ public class CacheDependenciesListener extends DefaultEventListener {
     private void collectPathToFlush(Event event, JCRSessionWrapper session, Collection<String> pathToFlush, Collection<String> processedNodes)  {
         final JCRNodeWrapper node;
         final String nodePath;
+        final List<String> nodeTypes;
         final JCRItemWrapper item;
-        String itemPath = null;
+        final String itemPath;
+
         try {
             itemPath = event.getPath();
-            item = session.getItem(itemPath);
-            if (item.isNode()) {
-                node = (JCRNodeWrapper) item;
-                nodePath = itemPath;
-            } else {
-                node = item.getParent();
-                nodePath = node.getPath();
-            }
-            if (processedNodes.contains(nodePath)) return;
-            processedNodes.add(nodePath);
         } catch (RepositoryException e) {
-            // some properties are added and removed, such as WIP, locks, ...
-            logger.debug("Impossible to load the item {}", itemPath);
+            logger.error("", e);
             return;
         }
+
+        switch (event.getType()) {
+            case Event.NODE_REMOVED:
+                nodePath = itemPath;
+                nodeTypes = (event instanceof JCRObservationManager.EventWrapper) ? ((JCRObservationManager.EventWrapper) event).getNodeTypes() : null;
+                node = null;
+                break;
+            case Event.PROPERTY_REMOVED:
+                nodePath = StringUtils.substringBeforeLast(itemPath, "/");
+                node = getNode(nodePath, session);
+                nodeTypes = null;
+                break;
+            default:
+                try {
+                    item = session.getItem(itemPath);
+                    if (item.isNode()) {
+                        node = (JCRNodeWrapper) item;
+                        nodePath = itemPath;
+                    } else {
+                        node = item.getParent();
+                        nodePath = node.getPath();
+                    }
+                } catch (RepositoryException e) {
+                    logger.error("", e);
+                    return;
+                }
+                nodeTypes = null;
+        }
+
+        if (processedNodes.contains(nodePath)) return;
+        processedNodes.add(nodePath);
+
+        if (node == null && nodeTypes == null) return;
+
+        final Predicate<String> nodeIsOfType;
+        if (nodeTypes == null) {
+            nodeIsOfType = type -> {
+                try {
+                    return node.isNodeType(type);
+                } catch (RepositoryException e) {
+                    logger.error("", e);
+                    return false;
+                }
+            };
+        } else {
+            nodeIsOfType = nodeTypes::contains;
+        }
+
         watchedNodeTypesMapping.forEach((type, deps) -> {
-            try {
-                if (!node.isNodeType(type)) return;
-            } catch (RepositoryException e) {
-                logger.error("", e);
-                return;
-            }
+            if (!nodeIsOfType.test(type)) return;
             deps.stream()
                     .map(pathMapping::get)
                     .filter(Objects::nonNull)
@@ -203,5 +239,13 @@ public class CacheDependenciesListener extends DefaultEventListener {
     private void addWatchedNodeType(String type, String uuid) {
         if (!watchedNodeTypesMapping.containsKey(type)) watchedNodeTypesMapping.put(type, new HashSet<>());
         watchedNodeTypesMapping.get(type).add(uuid);
+    }
+
+    private JCRNodeWrapper getNode(String path, JCRSessionWrapper session) {
+        try {
+            return session.getNode(path);
+        } catch (RepositoryException e) {
+            return null;
+        }
     }
 }
