@@ -30,7 +30,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Component(service = DefaultEventListener.class, property = {"CacheDependenciesListener=true"})
@@ -40,6 +39,7 @@ public class CacheDependenciesListener extends DefaultEventListener {
 
     private final static int NODE_EVENTS = IntStream.of(Event.NODE_ADDED, Event.NODE_REMOVED, Event.NODE_MOVED).sum();
     private final static int PROPERTY_EVENTS = IntStream.of(Event.PROPERTY_ADDED, Event.PROPERTY_REMOVED, Event.PROPERTY_CHANGED).sum();
+
     public static final String FS_CACHE_FILENAME = "mod-cache-dependencies.txt";
     public static final String JAVA_IO_TMPDIR = "java.io.tmpdir";
     public static final String STRUCTURE_VERSION = "fs cache structure V1";
@@ -81,7 +81,7 @@ public class CacheDependenciesListener extends DefaultEventListener {
                     continue;
                 }
                 final String nt = items[1];
-                for (int i =2; i<items.length; i++) {
+                for (int i = 2; i < items.length; i++) {
                     addWatchedNodeType(nt, items[i]);
                 }
             } else if (StringUtils.equals(key, "pathMapping")) {
@@ -156,7 +156,7 @@ public class CacheDependenciesListener extends DefaultEventListener {
         }
     }
 
-    private void collectPathToFlush(Event event, JCRSessionWrapper session, Collection<String> pathToFlush, Collection<String> processedNodes)  {
+    private void collectPathToFlush(Event event, JCRSessionWrapper session, Collection<String> pathToFlush, Collection<String> processedNodes) {
         final JCRNodeWrapper node;
         final String nodePath;
         final List<String> nodeTypes;

@@ -6,7 +6,6 @@ import org.jahia.ps.modules.utils.cache.listeners.CacheDependenciesListener;
 import org.jahia.services.content.DefaultEventListener;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.render.RenderContext;
-import org.jahia.services.render.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +53,7 @@ public class AddNodeTypeBasedCacheDependencyTag extends TagSupport {
         }
 
         final DefaultEventListener listener = BundleUtils.getOsgiService(DefaultEventListener.class, "(CacheDependenciesListener=true)");
-        if  (!(listener instanceof CacheDependenciesListener)) {
+        if (!(listener instanceof CacheDependenciesListener)) {
             logger.error("Impossible to resolve the dependencies listener");
         } else {
             final CacheDependenciesListener dependenciesListener = (CacheDependenciesListener) listener;
