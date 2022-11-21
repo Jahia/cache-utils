@@ -19,6 +19,7 @@ public class AddNodeTypeBasedCacheDependencyTag extends TagSupport {
 
     private JCRNodeWrapper node;
     private String nodeTypes;
+    private String path;
 
     public void setNode(JCRNodeWrapper node) {
         this.node = node;
@@ -28,9 +29,14 @@ public class AddNodeTypeBasedCacheDependencyTag extends TagSupport {
         this.nodeTypes = nodeTypes;
     }
 
+    public void setPath(String path) {
+        this.path = path;
+    }
+
     private void resetState() {
         node = null;
         nodeTypes = null;
+        path = null;
     }
 
     @Override
