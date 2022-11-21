@@ -37,12 +37,11 @@ public class CacheDependenciesListener extends DefaultEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheDependenciesListener.class);
 
-    private final static int NODE_EVENTS = IntStream.of(Event.NODE_ADDED, Event.NODE_REMOVED, Event.NODE_MOVED).sum();
-    private final static int PROPERTY_EVENTS = IntStream.of(Event.PROPERTY_ADDED, Event.PROPERTY_REMOVED, Event.PROPERTY_CHANGED).sum();
-
-    public static final String FS_CACHE_FILENAME = "mod-cache-dependencies.txt";
-    public static final String JAVA_IO_TMPDIR = "java.io.tmpdir";
-    public static final String STRUCTURE_VERSION = "fs cache structure V1";
+    private static final int NODE_EVENTS = IntStream.of(Event.NODE_ADDED, Event.NODE_REMOVED, Event.NODE_MOVED).sum();
+    private static final int PROPERTY_EVENTS = IntStream.of(Event.PROPERTY_ADDED, Event.PROPERTY_REMOVED, Event.PROPERTY_CHANGED).sum();
+    private static final String FS_CACHE_FILENAME = "mod-cache-dependencies.txt";
+    private static final String JAVA_IO_TMPDIR = "java.io.tmpdir";
+    private static final String STRUCTURE_VERSION = "fs cache structure V1";
 
     private final Map<String, Set<String>> watchedNodeTypesMapping = new ConcurrentHashMap<>();
     private final Map<String, String> pathMapping = new ConcurrentHashMap<>();
