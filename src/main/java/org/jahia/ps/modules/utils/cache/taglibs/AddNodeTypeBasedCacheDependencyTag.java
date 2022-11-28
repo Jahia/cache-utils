@@ -1,9 +1,8 @@
 package org.jahia.ps.modules.utils.cache.taglibs;
 
 import org.apache.commons.lang.StringUtils;
-import org.jahia.osgi.BundleUtils;
 import org.jahia.ps.modules.utils.cache.listeners.CacheDependenciesListener;
-import org.jahia.services.content.DefaultEventListener;
+import org.jahia.ps.modules.utils.cache.utils.Utils;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.render.RenderContext;
 import org.slf4j.Logger;
@@ -58,11 +57,8 @@ public class AddNodeTypeBasedCacheDependencyTag extends TagSupport {
             return super.doEndTag();
         }
 
-        final DefaultEventListener listener = BundleUtils.getOsgiService(DefaultEventListener.class, "(CacheDependenciesListener=true)");
-        if (!(listener instanceof CacheDependenciesListener)) {
-            logger.error("Impossible to resolve the dependencies listener");
-        } else {
-            final CacheDependenciesListener dependenciesListener = (CacheDependenciesListener) listener;
+        final CacheDependenciesListener dependenciesListener = Utils.getListener();
+        if (dependenciesListener != null) {
             for (String nt : StringUtils.split(nodeTypes)) {
                 dependenciesListener.addDependency(node, nt);
             }
@@ -71,4 +67,5 @@ public class AddNodeTypeBasedCacheDependencyTag extends TagSupport {
         resetState();
         return super.doEndTag();
     }
+
 }
