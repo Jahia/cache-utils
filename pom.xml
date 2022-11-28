@@ -62,8 +62,8 @@
     <description>This is the custom module (Cache Utils) for running on a Jahia server.</description>
 
     <scm>
-        <connection>scm:dummy:uri</connection>
-        <developerConnection>scm:dummy:uri</developerConnection>
+        <connection>scm:git:git@github.com:Jahia/cache-utils</connection>
+        <developerConnection>scm:git:git@github.com:Jahia/cache-utils</developerConnection>
     </scm>
 
     <properties>
