@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-@Component(service = {CacheEventLogger.class}, immediate = true, configurationPid = "cacheutils.eventlogger")
+@Component(service = CacheEventLogger.class, immediate = true, configurationPid = "cacheutils.eventlogger")
 @Designate(ocd = CacheEventLogger.Config.class)
 public class CacheEventLogger {
     @ObjectClassDefinition(name = "%configuration.name", description = "%configuration.description", localization = "OSGI-INF/l10n/cacheEventLogger")
