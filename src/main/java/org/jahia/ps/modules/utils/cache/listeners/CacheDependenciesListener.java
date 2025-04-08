@@ -13,6 +13,9 @@ import org.jahia.services.content.JCRTemplate;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +35,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
-@Component(service = DefaultEventListener.class, property = {"CacheDependenciesListener=true"})
+@Component(service = {DefaultEventListener.class, CacheDependenciesListener.class}, configurationPid = "cacheutils.dependencieslistener")
+@Designate(ocd = CacheDependenciesListener.Config.class)
 public class CacheDependenciesListener extends DefaultEventListener {
+    @ObjectClassDefinition(name = "%configuration.name", description = "%configuration.description", localization = "OSGI-INF/l10n/cacheDependenciesListener")
+    public @interface Config {
+        @AttributeDefinition(name = "%isEnabled.name")
+        boolean isEnabled() default false;
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(CacheDependenciesListener.class);
 
@@ -45,6 +54,7 @@ public class CacheDependenciesListener extends DefaultEventListener {
 
     private final Map<String, Set<String>> watchedNodeTypesMapping = new ConcurrentHashMap<>();
     private final Map<String, String> pathMapping = new ConcurrentHashMap<>();
+    private Config config;
 
     public CacheDependenciesListener() {
         setWorkspace(Constants.LIVE_WORKSPACE);
@@ -52,7 +62,9 @@ public class CacheDependenciesListener extends DefaultEventListener {
     }
 
     @Activate
-    public void start() {
+    public void start(Config config) {
+        this.config = config;
+
         final File fsCache = getFsCache();
         if (!fsCache.exists()) return;
         final List<String> fileContent;
@@ -117,6 +129,10 @@ public class CacheDependenciesListener extends DefaultEventListener {
         }
     }
 
+    public boolean isEnabled() {
+        return config.isEnabled();
+    }
+
     private File getFsCache() {
         return new File(System.getProperty(JAVA_IO_TMPDIR), FS_CACHE_FILENAME);
     }
@@ -137,6 +153,8 @@ public class CacheDependenciesListener extends DefaultEventListener {
 
     @Override
     public void onEvent(EventIterator events) {
+        if (!config.isEnabled()) return;
+
         final Set<String> pathToFlush = new HashSet<>();
         final Set<String> processedNodes = new HashSet<>();
         try {
