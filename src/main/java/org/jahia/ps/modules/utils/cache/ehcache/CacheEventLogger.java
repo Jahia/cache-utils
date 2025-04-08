@@ -28,11 +28,11 @@ import java.util.Optional;
 @Component(service = {CacheEventLogger.class}, immediate = true, configurationPid = "cacheutils.eventlogger")
 @Designate(ocd = CacheEventLogger.Config.class)
 public class CacheEventLogger {
-    @ObjectClassDefinition(name = "Ehcache events logger", description = "Configuration for the Ehcache events logger")
+    @ObjectClassDefinition(name = "%configuration.name", description = "%configuration.description", localization = "OSGI-INF/l10n/cacheEventLogger")
     public @interface Config {
         @AttributeDefinition(
-                name = "Monitored caches",
-                description = "Cache group, cache name and monitored events. Comma separated. Possible values for the events: put,updated,evicted,removed,expired,removeall"
+                name = "%monitoredCaches.name",
+                description = "%monitoredCaches.description"
         )
         String[] monitoredCaches() default {"bigEhCacheProvider,HTMLCache,evicted", "ehCacheProvider,HTMLNodeUsersACLs,evicted,removed,expired,removeall"};
     }
