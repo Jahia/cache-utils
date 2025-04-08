@@ -5,6 +5,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jahia.api.Constants;
 import org.jahia.services.cache.CacheHelper;
 import org.jahia.services.content.DefaultEventListener;
+import org.jahia.services.content.ExternalEventListener;
 import org.jahia.services.content.JCRItemWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.JCRObservationManager;
@@ -37,7 +38,7 @@ import java.util.stream.IntStream;
 
 @Component(service = {DefaultEventListener.class, CacheDependenciesListener.class}, configurationPid = "cacheutils.dependencieslistener")
 @Designate(ocd = CacheDependenciesListener.Config.class)
-public class CacheDependenciesListener extends DefaultEventListener {
+public class CacheDependenciesListener extends DefaultEventListener implements ExternalEventListener {
     @ObjectClassDefinition(name = "%configuration.name", description = "%configuration.description", localization = "OSGI-INF/l10n/cacheDependenciesListener")
     public @interface Config {
         @AttributeDefinition(name = "%isEnabled.name")
