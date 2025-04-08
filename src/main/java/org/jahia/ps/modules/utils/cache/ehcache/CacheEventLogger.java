@@ -14,6 +14,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import org.osgi.service.metatype.annotations.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -35,6 +36,17 @@ public class CacheEventLogger {
                 description = "%monitoredCaches.description"
         )
         String[] monitoredCaches() default {"bigEhCacheProvider,HTMLCache,evicted", "ehCacheProvider,HTMLNodeUsersACLs,evicted,removed,expired,removeall"};
+
+        @AttributeDefinition(name = "%logLevel.name", description = "%logLevel.description",
+                options = {
+                        @Option(label = "%OFF", value = "OFF"),
+                        @Option(label = "%DEBUG", value = "DEBUG"),
+                        @Option(label = "%INFO", value = "INFO"),
+                        @Option(label = "%WARN", value = "WARN"),
+                        @Option(label = "%ERROR", value = "ERROR")
+                }
+        )
+        String logLevel() default "OFF";
     }
 
     private static final Logger logger = LoggerFactory.getLogger(CacheEventLogger.class);
@@ -71,7 +83,7 @@ public class CacheEventLogger {
 
         monitoredCaches.forEach((groupName, groupCaches) -> {
             groupCaches.forEach((cacheName, cacheEvents) -> {
-                registerListener(groupName, cacheName, cacheEvents);
+                registerListener(groupName, cacheName, cacheEvents, config.logLevel());
             });
         });
         logger.info("Added all the listeners");
@@ -98,11 +110,11 @@ public class CacheEventLogger {
         monitoredCaches.get(group).put(name, Arrays.asList(events));
     }
 
-    private void registerListener(String cacheGroup, String cacheName, Collection<CacheEvent> cacheEvents) {
+    private void registerListener(String cacheGroup, String cacheName, Collection<CacheEvent> cacheEvents, String level) {
         final CacheEventLoggerListener[] listener = new CacheEventLoggerListener[1];
         final boolean sucess = Optional.ofNullable(getCache(cacheGroup, cacheName))
                 .map(Ehcache::getCacheEventNotificationService)
-                .map(l -> l.registerListener(listener[0] = new CacheEventLoggerListener(cacheEvents), NotificationScope.ALL))
+                .map(l -> l.registerListener(listener[0] = new CacheEventLoggerListener(cacheEvents, level), NotificationScope.ALL))
                 .orElse(false);
         if (sucess) {
             if (!listeners.containsKey(cacheGroup)) listeners.put(cacheGroup, new HashMap<>());
@@ -118,7 +130,7 @@ public class CacheEventLogger {
                 .orElse(false);
     }
 
-    private Ehcache getCache(String group, String name){
+    private Ehcache getCache(String group, String name) {
         final CacheProvider cacheProvider;
         try {
             cacheProvider = (CacheProvider) SpringContextSingleton.getBean(group);

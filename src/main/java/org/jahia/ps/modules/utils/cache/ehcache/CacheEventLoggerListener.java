@@ -12,19 +12,45 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class CacheEventLoggerListener implements CacheEventListener {
     private static final Logger logger = LoggerFactory.getLogger(CacheEventLoggerListener.class);
 
     private final Collection<CacheEvent> cacheEvents;
+    private final Consumer<String> printer;
+    private final Supplier<Boolean> printerActive;
 
-    public CacheEventLoggerListener(Collection<CacheEvent> cacheEvents) {
+    public CacheEventLoggerListener(Collection<CacheEvent> cacheEvents, String logLevel) {
         this.cacheEvents = new ArrayList<>(cacheEvents);
+        switch (StringUtils.upperCase(logLevel)) {
+            case "DEBUG":
+                printer = logger::debug;
+                printerActive = logger::isDebugEnabled;
+                break;
+            case "INFO":
+                printer = logger::info;
+                printerActive = logger::isInfoEnabled;
+                break;
+            case "WARN":
+                printer = logger::warn;
+                printerActive = logger::isWarnEnabled;
+                break;
+            case "ERROR":
+                printer = logger::error;
+                printerActive = logger::isErrorEnabled;
+                break;
+            default:
+                printer = null;
+                printerActive = () -> Boolean.FALSE;
+        }
+
     }
 
     private void notify(Ehcache cache, Element element, CacheEvent cacheEvent, String eventDesc) {
-        if (logger.isDebugEnabled() && cacheEvents.contains(cacheEvent)) {
-            logger.debug("Element {} from {}: {}", eventDesc, cache.getName(), element.getObjectKey());
+        if (printerActive.get() && cacheEvents.contains(cacheEvent)) {
+            printer.accept(String.format("Element %s from %s: %s", eventDesc, cache.getName(), element.getObjectKey()));
         }
     }
 
@@ -55,8 +81,8 @@ public class CacheEventLoggerListener implements CacheEventListener {
 
     @Override
     public void notifyRemoveAll(Ehcache cache) {
-        if (logger.isDebugEnabled() && cacheEvents.contains(CacheEvent.REMOVE_ALL)) {
-            logger.debug("Removed all from {}", cache.getName());
+        if (printerActive.get() && cacheEvents.contains(CacheEvent.REMOVE_ALL)) {
+            printer.accept(String.format("Removed all from %s", cache.getName()));
         }
     }
 
