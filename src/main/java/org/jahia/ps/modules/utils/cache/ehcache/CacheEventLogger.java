@@ -114,7 +114,13 @@ public class CacheEventLogger {
         final CacheEventLoggerListener[] listener = new CacheEventLoggerListener[1];
         final boolean sucess = Optional.ofNullable(getCache(cacheGroup, cacheName))
                 .map(Ehcache::getCacheEventNotificationService)
-                .map(l -> l.registerListener(listener[0] = new CacheEventLoggerListener(cacheEvents, level), NotificationScope.ALL))
+                .map(l -> {
+                    listener[0] = new CacheEventLoggerListener(cacheEvents, level);
+                    if (listener[0].isActive()) {
+                        return l.registerListener(listener[0], NotificationScope.ALL);
+                    }
+                    return false;
+                })
                 .orElse(false);
         if (sucess) {
             if (!listeners.containsKey(cacheGroup)) listeners.put(cacheGroup, new HashMap<>());

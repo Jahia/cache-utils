@@ -4,6 +4,7 @@ import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.event.CacheEventListener;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jahia.ps.modules.utils.cache.ehcache.CacheEventLogger.CacheEvent;
 import org.jahia.utils.Patterns;
@@ -21,31 +22,42 @@ public class CacheEventLoggerListener implements CacheEventListener {
     private final Collection<CacheEvent> cacheEvents;
     private final Consumer<String> printer;
     private final Supplier<Boolean> printerActive;
+    private final boolean isActive;
 
     public CacheEventLoggerListener(Collection<CacheEvent> cacheEvents, String logLevel) {
         this.cacheEvents = new ArrayList<>(cacheEvents);
+        final boolean isValidLogLevel;
         switch (StringUtils.upperCase(logLevel)) {
             case "DEBUG":
                 printer = logger::debug;
                 printerActive = logger::isDebugEnabled;
+                isValidLogLevel = true;
                 break;
             case "INFO":
                 printer = logger::info;
                 printerActive = logger::isInfoEnabled;
+                isValidLogLevel = true;
                 break;
             case "WARN":
                 printer = logger::warn;
                 printerActive = logger::isWarnEnabled;
+                isValidLogLevel = true;
                 break;
             case "ERROR":
                 printer = logger::error;
                 printerActive = logger::isErrorEnabled;
+                isValidLogLevel = true;
                 break;
             default:
                 printer = null;
                 printerActive = () -> Boolean.FALSE;
+                isValidLogLevel = false;
         }
+        isActive = isValidLogLevel && CollectionUtils.isNotEmpty(this.cacheEvents);
+    }
 
+    public boolean isActive() {
+        return isActive;
     }
 
     private void notify(Ehcache cache, Element element, CacheEvent cacheEvent, String eventDesc) {
