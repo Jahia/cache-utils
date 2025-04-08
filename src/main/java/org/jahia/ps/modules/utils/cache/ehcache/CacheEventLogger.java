@@ -102,7 +102,7 @@ public class CacheEventLogger {
         if (StringUtils.isBlank(conf)) return;
         final String[] items = Patterns.COMMA.split(conf);
         if (items.length < 3) return;
-        monitorCache(items[0], items[1], Arrays.stream(items).skip(2).map(StringUtils::trimToNull).filter(Objects::nonNull).map(this::fromKey).toArray(CacheEvent[]::new));
+        monitorCache(items[0], items[1], Arrays.stream(items).skip(2).map(StringUtils::trimToNull).map(this::fromKey).filter(Objects::nonNull).toArray(CacheEvent[]::new));
     }
 
     private void monitorCache(String group, String name, CacheEvent... events) {
