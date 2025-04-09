@@ -119,10 +119,10 @@ public class CacheEventLogger {
         final CacheEventLoggerListener[] listener = new CacheEventLoggerListener[1];
         final boolean sucess = Optional.ofNullable(getCache(cacheGroup, cacheName))
                 .map(Ehcache::getCacheEventNotificationService)
-                .map(l -> {
+                .map(notificationService -> {
                     listener[0] = new CacheEventLoggerListener(cacheEvents, level);
                     if (listener[0].isActive()) {
-                        return l.registerListener(listener[0], NotificationScope.ALL);
+                        return notificationService.registerListener(listener[0], NotificationScope.ALL);
                     }
                     return false;
                 })
@@ -135,9 +135,9 @@ public class CacheEventLogger {
     }
 
     private void unregisterListener(String cacheGroup, String cacheName, CacheEventListener listener) {
-        final boolean sucess = Optional.ofNullable(getCache(cacheGroup, cacheName))
+        final boolean success = Optional.ofNullable(getCache(cacheGroup, cacheName))
                 .map(Ehcache::getCacheEventNotificationService)
-                .map(l -> l.unregisterListener(listener))
+                .map(notificationService -> notificationService.unregisterListener(listener))
                 .orElse(false);
     }
 
