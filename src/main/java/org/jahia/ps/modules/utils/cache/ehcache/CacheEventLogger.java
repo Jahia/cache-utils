@@ -56,7 +56,22 @@ public class CacheEventLogger {
     private final Map<String, Map<String, CacheEventListener>> listeners = new HashMap<>();
 
     public enum CacheEvent {
-        ELEMENT_REMOVED, ELEMENT_PUT, ELEMENT_UPDATED, ELEMENT_EXPIRED, ELEMENT_EVICTED, REMOVE_ALL
+        ELEMENT_PUT("Element put in"),
+        ELEMENT_UPDATED("Element updated in"),
+        ELEMENT_REMOVED("Element removed from"),
+        ELEMENT_EXPIRED("Element expired from"),
+        ELEMENT_EVICTED("Element evicted from"),
+        REMOVE_ALL("Removed all from");
+
+        private final String msg;
+
+        CacheEvent(String msg) {
+            this.msg = msg;
+        }
+
+        public String getMsg() {
+            return msg;
+        }
     }
 
     private CacheEvent fromKey(String key) {

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -60,42 +61,45 @@ public class CacheEventLoggerListener implements CacheEventListener {
         return isActive;
     }
 
-    private void notify(Ehcache cache, Element element, CacheEvent cacheEvent, String eventDesc) {
+    private void notify(Ehcache cache, Element element, CacheEvent cacheEvent) {
         if (printerActive.get() && cacheEvents.contains(cacheEvent)) {
-            printer.accept(String.format("Element %s from %s: %s", eventDesc, cache.getName(), element.getObjectKey()));
+            final String elementDesc = Optional.ofNullable(element)
+                    .map(Element::getObjectKey)
+                    .map(Object::toString)
+                    .map(": "::concat)
+                    .orElse(StringUtils.EMPTY);
+            printer.accept(String.format("%s %s%s", cacheEvent.getMsg(), cache.getName(), elementDesc));
         }
     }
 
     @Override
     public void notifyElementRemoved(Ehcache cache, Element element) throws CacheException {
-        notify(cache, element, CacheEvent.ELEMENT_REMOVED, "removed");
+        notify(cache, element, CacheEvent.ELEMENT_REMOVED);
     }
 
     @Override
     public void notifyElementPut(Ehcache cache, Element element) throws CacheException {
-        notify(cache, element, CacheEvent.ELEMENT_PUT, "put");
+        notify(cache, element, CacheEvent.ELEMENT_PUT);
     }
 
     @Override
     public void notifyElementUpdated(Ehcache cache, Element element) throws CacheException {
-        notify(cache, element, CacheEvent.ELEMENT_UPDATED, "updated");
+        notify(cache, element, CacheEvent.ELEMENT_UPDATED);
     }
 
     @Override
     public void notifyElementExpired(Ehcache cache, Element element) {
-        notify(cache, element, CacheEvent.ELEMENT_EXPIRED, "expired");
+        notify(cache, element, CacheEvent.ELEMENT_EXPIRED);
     }
 
     @Override
     public void notifyElementEvicted(Ehcache cache, Element element) {
-        notify(cache, element, CacheEvent.ELEMENT_EVICTED, "evicted");
+        notify(cache, element, CacheEvent.ELEMENT_EVICTED);
     }
 
     @Override
     public void notifyRemoveAll(Ehcache cache) {
-        if (printerActive.get() && cacheEvents.contains(CacheEvent.REMOVE_ALL)) {
-            printer.accept(String.format("Removed all from %s", cache.getName()));
-        }
+        notify(cache, null, CacheEvent.REMOVE_ALL);
     }
 
     @Override
