@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Component(service = CacheEventLogger.class, immediate = true, configurationPid = "cacheutils.eventlogger")
 @Designate(ocd = CacheEventLogger.Config.class)
@@ -35,7 +36,7 @@ public class CacheEventLogger {
                 name = "%monitoredCaches.name",
                 description = "%monitoredCaches.description"
         )
-        String[] monitoredCaches() default {"bigEhCacheProvider,HTMLCache,evicted", "ehCacheProvider,HTMLNodeUsersACLs,evicted,removed,expired,removeall"};
+        String monitoredCachesStr() default "bigEhCacheProvider,HTMLCache,evicted || ehCacheProvider,HTMLNodeUsersACLs,evicted,removed,expired,removeall";
 
         @AttributeDefinition(name = "%logLevel.name", description = "%logLevel.description",
                 options = {
@@ -79,7 +80,11 @@ public class CacheEventLogger {
     public void activate(Config config) {
         reset();
 
-        Arrays.stream(config.monitoredCaches()).forEach(this::monitorCache);
+        Pattern.compile(Pattern.quote("||"))
+                .splitAsStream(config.monitoredCachesStr())
+                .map(StringUtils::trimToNull)
+                .filter(Objects::nonNull)
+                .forEach(this::monitorCache);
 
         monitoredCaches.forEach((groupName, groupCaches) -> {
             groupCaches.forEach((cacheName, cacheEvents) -> {

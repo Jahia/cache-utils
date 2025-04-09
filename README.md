@@ -12,8 +12,7 @@ To monitor the cache events on some caches, edit the OSGi configuration named `E
 
 Configure each tag to monitor, specifying the cache group, the cache name, and then the events to be logged. Examples:
 ```
-bigEhCacheProvider,HTMLCache,evicted
-ehCacheProvider,HTMLNodeUsersACLs,evicted,removed,expired,removeall
+bigEhCacheProvider,HTMLCache,evicted || ehCacheProvider,HTMLNodeUsersACLs,evicted,removed,expired,removeall
 ```
 
 Possible events:
