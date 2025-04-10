@@ -24,35 +24,42 @@ public class CacheEventLoggerListener implements CacheEventListener {
     private final Consumer<String> printer;
     private final Supplier<Boolean> printerActive;
     private final boolean isActive;
+    private final String logLevel;
 
     public CacheEventLoggerListener(Collection<CacheEvent> cacheEvents, String logLevel) {
         this.cacheEvents = new ArrayList<>(cacheEvents);
         final boolean isValidLogLevel;
-        switch (StringUtils.upperCase(logLevel)) {
+        final String lvl = StringUtils.upperCase(logLevel);
+        switch (lvl) {
             case "DEBUG":
                 printer = logger::debug;
                 printerActive = logger::isDebugEnabled;
                 isValidLogLevel = true;
+                this.logLevel = lvl;
                 break;
             case "INFO":
                 printer = logger::info;
                 printerActive = logger::isInfoEnabled;
                 isValidLogLevel = true;
+                this.logLevel = lvl;
                 break;
             case "WARN":
                 printer = logger::warn;
                 printerActive = logger::isWarnEnabled;
                 isValidLogLevel = true;
+                this.logLevel = lvl;
                 break;
             case "ERROR":
                 printer = logger::error;
                 printerActive = logger::isErrorEnabled;
                 isValidLogLevel = true;
+                this.logLevel = lvl;
                 break;
             default:
                 printer = null;
                 printerActive = () -> Boolean.FALSE;
                 isValidLogLevel = false;
+                this.logLevel = "OFF";
         }
         isActive = isValidLogLevel && CollectionUtils.isNotEmpty(this.cacheEvents);
     }
@@ -113,6 +120,6 @@ public class CacheEventLoggerListener implements CacheEventListener {
 
     @Override
     public String toString() {
-        return "Cache listener on : " + StringUtils.join(cacheEvents, Patterns.COMMA.toString());
+        return String.format("Cache listener (level:%s) on : %s", logLevel, StringUtils.join(cacheEvents, Patterns.COMMA.toString()));
     }
 }
