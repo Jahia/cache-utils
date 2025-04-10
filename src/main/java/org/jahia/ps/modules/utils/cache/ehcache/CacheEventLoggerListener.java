@@ -14,15 +14,21 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
 public class CacheEventLoggerListener implements CacheEventListener {
     private static final Logger logger = LoggerFactory.getLogger(CacheEventLoggerListener.class);
+    private static final Logger loggerPut = getLogger("put");
+    private static final Logger loggerUpdated = getLogger("updated");
+    private static final Logger loggerRemoved = getLogger("removed");
+    private static final Logger loggerExpired = getLogger("expired");
+    private static final Logger loggerEvicted = getLogger("evicted");
+    private static final Logger loggerRemoveAll = getLogger("removeAll");
 
     private final Collection<CacheEvent> cacheEvents;
-    private final Consumer<String> printer;
-    private final Supplier<Boolean> printerActive;
+    private final BiConsumer<Logger, String> logGenerator;
+    private final Predicate<Logger> logGeneratorEnabled;
     private final boolean isActive;
     private final String logLevel;
 
@@ -32,32 +38,32 @@ public class CacheEventLoggerListener implements CacheEventListener {
         final String lvl = StringUtils.upperCase(logLevel);
         switch (lvl) {
             case "DEBUG":
-                printer = logger::debug;
-                printerActive = logger::isDebugEnabled;
+                logGenerator = Logger::debug;
+                logGeneratorEnabled = Logger::isDebugEnabled;
                 isValidLogLevel = true;
                 this.logLevel = lvl;
                 break;
             case "INFO":
-                printer = logger::info;
-                printerActive = logger::isInfoEnabled;
+                logGenerator = Logger::info;
+                logGeneratorEnabled = Logger::isInfoEnabled;
                 isValidLogLevel = true;
                 this.logLevel = lvl;
                 break;
             case "WARN":
-                printer = logger::warn;
-                printerActive = logger::isWarnEnabled;
+                logGenerator = Logger::warn;
+                logGeneratorEnabled = Logger::isWarnEnabled;
                 isValidLogLevel = true;
                 this.logLevel = lvl;
                 break;
             case "ERROR":
-                printer = logger::error;
-                printerActive = logger::isErrorEnabled;
+                logGenerator = Logger::error;
+                logGeneratorEnabled = Logger::isErrorEnabled;
                 isValidLogLevel = true;
                 this.logLevel = lvl;
                 break;
             default:
-                printer = null;
-                printerActive = () -> Boolean.FALSE;
+                logGenerator = null;
+                logGeneratorEnabled = l -> Boolean.FALSE;
                 isValidLogLevel = false;
                 this.logLevel = "OFF";
         }
@@ -68,45 +74,48 @@ public class CacheEventLoggerListener implements CacheEventListener {
         return isActive;
     }
 
-    private void notify(Ehcache cache, Element element, CacheEvent cacheEvent) {
-        if (printerActive.get() && cacheEvents.contains(cacheEvent)) {
+    private void notify(Ehcache cache, Element element, CacheEvent cacheEvent, Logger out) {
+        if (logGeneratorEnabled.test(out) && cacheEvents.contains(cacheEvent)) {
             final String elementDesc = Optional.ofNullable(element)
                     .map(Element::getObjectKey)
                     .map(Object::toString)
                     .map(": "::concat)
                     .orElse(StringUtils.EMPTY);
-            printer.accept(String.format("%s %s%s", cacheEvent.getMsg(), cache.getName(), elementDesc));
+            logGenerator.accept(out, String.format("%s %s%s", cacheEvent.getMsg(), cache.getName(), elementDesc));
         }
+    }
+    private static Logger getLogger(String eventType) {
+        return LoggerFactory.getLogger(CacheEventLoggerListener.class + ".CacheEvent" + StringUtils.capitalize(eventType));
     }
 
     @Override
     public void notifyElementRemoved(Ehcache cache, Element element) throws CacheException {
-        notify(cache, element, CacheEvent.ELEMENT_REMOVED);
+        notify(cache, element, CacheEvent.ELEMENT_REMOVED, loggerRemoved);
     }
 
     @Override
     public void notifyElementPut(Ehcache cache, Element element) throws CacheException {
-        notify(cache, element, CacheEvent.ELEMENT_PUT);
+        notify(cache, element, CacheEvent.ELEMENT_PUT, loggerPut);
     }
 
     @Override
     public void notifyElementUpdated(Ehcache cache, Element element) throws CacheException {
-        notify(cache, element, CacheEvent.ELEMENT_UPDATED);
+        notify(cache, element, CacheEvent.ELEMENT_UPDATED, loggerUpdated);
     }
 
     @Override
     public void notifyElementExpired(Ehcache cache, Element element) {
-        notify(cache, element, CacheEvent.ELEMENT_EXPIRED);
+        notify(cache, element, CacheEvent.ELEMENT_EXPIRED, loggerExpired);
     }
 
     @Override
     public void notifyElementEvicted(Ehcache cache, Element element) {
-        notify(cache, element, CacheEvent.ELEMENT_EVICTED);
+        notify(cache, element, CacheEvent.ELEMENT_EVICTED, loggerEvicted);
     }
 
     @Override
     public void notifyRemoveAll(Ehcache cache) {
-        notify(cache, null, CacheEvent.REMOVE_ALL);
+        notify(cache, null, CacheEvent.REMOVE_ALL, loggerRemoveAll);
     }
 
     @Override
