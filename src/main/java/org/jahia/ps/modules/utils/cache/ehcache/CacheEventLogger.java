@@ -36,7 +36,10 @@ public class CacheEventLogger {
                 name = "%monitoredCaches.name",
                 description = "%monitoredCaches.description"
         )
-        String monitoredCachesStr() default "bigEhCacheProvider,HTMLCache,evicted || ehCacheProvider,HTMLNodeUsersACLs,evicted,removed,expired,removeall";
+        String monitoredCachesStr() default "bigEhCacheProvider,HTMLCache,evicted " +
+                "|| bigEhCacheProvider,HTMLDependenciesCache,evicted " +
+                "|| bigEhCacheProvider,HTMLREGEXPDependenciesCache,evicted " +
+                "|| ehCacheProvider,HTMLNodeUsersACLs,evicted,removed,expired,removeall";
 
         @AttributeDefinition(name = "%logLevel.name", description = "%logLevel.description",
                 options = {
