@@ -19,12 +19,12 @@ import java.util.function.Predicate;
 
 public class CacheEventLoggerListener implements CacheEventListener {
     private static final Logger logger = LoggerFactory.getLogger(CacheEventLoggerListener.class);
-    private static final Logger loggerPut = getLogger("put");
-    private static final Logger loggerUpdated = getLogger("updated");
-    private static final Logger loggerRemoved = getLogger("removed");
-    private static final Logger loggerExpired = getLogger("expired");
-    private static final Logger loggerEvicted = getLogger("evicted");
-    private static final Logger loggerRemoveAll = getLogger("removeAll");
+    private final Logger loggerPut;
+    private final Logger loggerUpdated;
+    private final Logger loggerRemoved;
+    private final Logger loggerExpired;
+    private final Logger loggerEvicted;
+    private final Logger loggerRemoveAll;
 
     private final Collection<CacheEvent> cacheEvents;
     private final BiConsumer<Logger, String> logGenerator;
@@ -32,8 +32,14 @@ public class CacheEventLoggerListener implements CacheEventListener {
     private final boolean isActive;
     private final String logLevel;
 
-    public CacheEventLoggerListener(Collection<CacheEvent> cacheEvents, String logLevel) {
+    public CacheEventLoggerListener(Collection<CacheEvent> cacheEvents, String logLevel, String qualifier) {
         this.cacheEvents = new ArrayList<>(cacheEvents);
+        loggerPut = getLogger("put", qualifier);
+        loggerUpdated = getLogger("updated", qualifier);
+        loggerRemoved = getLogger("removed", qualifier);
+        loggerExpired = getLogger("expired", qualifier);
+        loggerEvicted = getLogger("evicted", qualifier);
+        loggerRemoveAll = getLogger("removeAll", qualifier);
         final boolean isValidLogLevel;
         final String lvl = StringUtils.upperCase(logLevel);
         switch (lvl) {
@@ -84,8 +90,13 @@ public class CacheEventLoggerListener implements CacheEventListener {
             logGenerator.accept(out, String.format("%s %s%s", cacheEvent.getMsg(), cache.getName(), elementDesc));
         }
     }
-    private static Logger getLogger(String eventType) {
-        return LoggerFactory.getLogger(CacheEventLoggerListener.class + ".CacheEvent" + StringUtils.capitalize(eventType));
+    private static Logger getLogger(String eventType, String qualifier) {
+        final StringBuilder loggerName = new StringBuilder();
+        loggerName.append(CacheEventLoggerListener.class.getName());
+        loggerName.append(".CacheEvent");
+        if (qualifier != null) loggerName.append(qualifier);
+        loggerName.append(StringUtils.capitalize(eventType));
+        return LoggerFactory.getLogger(loggerName.toString());
     }
 
     @Override

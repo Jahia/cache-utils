@@ -48,12 +48,16 @@ public class CacheEventLogger {
                 }
         )
         String logLevel() default "OFF";
+
+        @AttributeDefinition(name = "%useOneLoggerPerCache.name", description = "%useOneLoggerPerCache.description")
+        boolean useOneLoggerPerCache() default false;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(CacheEventLogger.class);
 
     private final Map<String, Map<String, Collection<CacheEvent>>> monitoredCaches = new HashMap<>();
     private final Map<String, Map<String, CacheEventListener>> listeners = new HashMap<>();
+    private boolean useOneLoggerPerCache = false;
 
     public enum CacheEvent {
         ELEMENT_PUT("Element put in"),
@@ -89,6 +93,7 @@ public class CacheEventLogger {
     private void reset() {
         monitoredCaches.clear();
         listeners.clear();
+        useOneLoggerPerCache = false;
     }
 
     @Activate
@@ -100,6 +105,7 @@ public class CacheEventLogger {
                 .map(StringUtils::trimToNull)
                 .filter(Objects::nonNull)
                 .forEach(this::monitorCache);
+        useOneLoggerPerCache = config.useOneLoggerPerCache();
 
         monitoredCaches.forEach((groupName, groupCaches) -> {
             groupCaches.forEach((cacheName, cacheEvents) -> {
@@ -135,7 +141,7 @@ public class CacheEventLogger {
         final boolean sucess = Optional.ofNullable(getCache(cacheGroup, cacheName))
                 .map(Ehcache::getCacheEventNotificationService)
                 .map(notificationService -> {
-                    listener[0] = new CacheEventLoggerListener(cacheEvents, level);
+                    listener[0] = new CacheEventLoggerListener(cacheEvents, level, getListenerLoggerQualifier(cacheName));
                     if (listener[0].isActive()) {
                         return notificationService.registerListener(listener[0], NotificationScope.ALL);
                     }
@@ -147,6 +153,15 @@ public class CacheEventLogger {
             listeners.get(cacheGroup).put(cacheName, listener[0]);
             logger.info("Registered cache listener on {} -> {}", cacheName, listener[0]);
         }
+    }
+
+    private String getListenerLoggerQualifier(String cacheName) {
+        if (!useOneLoggerPerCache) return null;
+        return Optional.of(cacheName)
+                .map(s -> s.contains(".") ? StringUtils.substringAfterLast(s, ".") : s)
+                .map(s -> s.replaceAll("[^A-Za-z]+", ""))
+                .map(StringUtils::capitalize)
+                .orElse(null);
     }
 
     private void unregisterListener(String cacheGroup, String cacheName, CacheEventListener listener) {
