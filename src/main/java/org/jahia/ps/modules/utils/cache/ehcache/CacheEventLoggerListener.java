@@ -135,7 +135,7 @@ public class CacheEventLoggerListener implements CacheEventListener {
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        return null;
+        throw new CloneNotSupportedException();
     }
 
     @Override
